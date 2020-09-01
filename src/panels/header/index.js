@@ -13,14 +13,13 @@ import TextColour from './components/text-colour';
 import BackgroundColour from './components/background-colour';
 import LSXImageUploadPanel from './components/media-upload';
 
-const lsxPageBannerPanel = () => {
-
+const lsxHeaderPanel = () => {
 	// Return the output of the Plugin Setting Panel.
 	return (
 		<PluginDocumentSettingPanel
-			name={ 'lsx_page_banner_panel' }
-			title={ __( 'Page Banner', 'lsx-blocks' ) }
-			className={ 'lsx-page-banner-panel' }
+			name={ 'lsx_header_panel' }
+			title={ __( 'Header', 'lsx-blocks' ) }
+			className={ 'lsx-page-banner-panel lsx-header-panel' }
 		>
 			<div className={ 'lsx-panel-row' }
 			>
@@ -48,4 +47,4 @@ const lsxPageBannerPanel = () => {
 /**
  * register the plugin.
  */
-registerPlugin( 'lsx-page-banner-panel', { render: lsxPageBannerPanel, icon: false } );
+registerPlugin( 'lsx-header-panel', { render: lsxHeaderPanel, icon: false } );

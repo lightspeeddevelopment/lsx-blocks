@@ -24,6 +24,5 @@ import './extensions/block-heading/heading-control.js';
 import './extensions/block-cover/cover-control.js';
 
 //Panels
-import './panels/page-banner/index.js';
-import './panels/page-title/index.js';
+import './panels/header/index.js';
 //import './panels/custom-field/index.js';
