@@ -29,24 +29,6 @@ class Page_Title {
 	protected static $instance = null;
 
 	/**
-	 * Holds the current screen
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var      string
-	 */
-	public $screen = '';
-
-	/**
-	 * Holds body CSS classes.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var string
-	 */
-	public $body_css = '';
-
-	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
 	 *
 	 * @since 1.0.0
@@ -54,8 +36,7 @@ class Page_Title {
 	 * @access private
 	 */
 	private function __construct() {
-		add_action( 'wp_head', array( $this, 'wp_head' ), 999 );
-		//add_filter( 'lsx_layout_customizer_controls', array( $this, 'customizer_controls' ), 10, 1 );
+		add_action( 'wp_head', array( $this, 'init' ), 999 );
 	}
 
 	/**
@@ -74,106 +55,46 @@ class Page_Title {
 	}
 
 	/**
-	 * Detects what screen it is and saves it.
-	 *
-	 * @return void
+	 * Init
 	 */
-	public function customizer_controls( $lsx_controls ) {
-
-		$post_type = array(
-			'post',
-			'page',
-		);
-		foreach ( $post_type as $post_type ) {
-			$lsx_controls['settings'][ 'lsx_' . $post_type . '_title_disable' ] = array(
-				'default'           => false,
-				'sanitize_callback' => 'lsx_sanitize_checkbox',
-				'transport'         => 'postMessage',
-				'type'              => 'option',
-			);
-
-			$lsx_controls['fields'][ 'lsx_' . $post_type . '_title_disable' ] = array(
-				'label'   => esc_html__( sprintf( 'Disable %s titles by default', $post_type ), 'lsx' ),
-				'section' => 'lsx-layout',
-				'type'    => 'checkbox',
-			);
-		}
-		return $lsx_controls;
-	}
-
-	/**
-	 * Detects what screen it is and saves it.
-	 *
-	 * @return void
-	 */
-	public function set_screen() {
-		if ( is_singular( array( 'post', 'page' ) ) && function_exists( 'has_blocks' ) && has_blocks() && ! is_front_page() && ! is_home() ) {
-			$disable_title = get_post_meta( get_the_ID(), 'lsx_disable_title', true );
-			// If the post meta is empty, then default to what is set via the customizer.
-			if ( 0 === $disable_title || '0' === $disable_title ) {
-				if ( 'post' === get_post_type() ) {
-					$disable_title = false;
-				} else {
-					$disable_title = true;
-				}
-				$disable_title = apply_filters( 'lsx_' . get_post_type() . '_title_disable', $disable_title );
+	public function init() {
+		if ( defined( 'LSX_VERSION' ) ) {
+			$version_compare = version_compare( '2.8.0', LSX_VERSION );
+			if ( $version_compare < 1 ) {
+				return;
 			}
-
-			if ( '' === $disable_title || false === $disable_title || 'no' === $disable_title ) {
-				$this->screen = 'single';
-				$this->body_css = 'lsx-page-title lsx-hero-banner-init';
-			} else {
-				$this->body_css = 'banner-disabled';
+			// Remove the legacy page title and entry meta.
+			if ( function_exists( 'has_blocks' ) && ( has_blocks() || true === apply_filters( 'override_title_display', false ) ) ) {
+				remove_action( 'lsx_entry_top', 'lsx_post_header' );
+				remove_action( 'lsx_entry_top', 'lsx_add_entry_meta', 999 );
+				add_action( 'body_class', array( $this, 'body_class' ) );
+				$this->position_title();
 			}
-
-			// Add the filter necessary for the singles.
-			add_filter( 'lsx_hero_banner_override', 'lsx_wc_disable_lsx_banner' );
-			add_filter( 'lsx_hero_banner_override', 'lsx_wc_disable_lsx_banner_plugin' );
-			add_filter( 'lsx_hero_banner_override', array( $this, 'disable_wc_banner' ) );
-
-			if ( class_exists( 'LSX_Sensei' ) ) {
-				add_filter( 'lsx_hero_banner_override', array( 'LSX_Sensei', 'lsx_sensei_disable_lsx_banner' ) );
-			}
-		} elseif ( is_singular( array( 'team', 'testimonial' ) ) ) {
-			$this->screen = '';
-			remove_action( 'lsx_content_wrap_before', 'lsx_global_header' );
-			add_filter( 'lsx_banner_disable', array( $this, 'disable_banner' ), 100, 1 );
-			add_filter( 'lsx_global_header_disable', array( $this, 'disable_banner' ), 100, 1 );
-			add_filter( 'lsx_page_banner_disable', array( $this, 'disable_banner' ), 100, 1 );
-
-		/*} elseif ( is_tax( $taxonomies ) ) {
-			$this->screen = 'taxonomy';
-		} elseif ( is_search() ) {
-			$engine       = get_query_var( 'engine' );
-			$this->screen = 'search';*/
-		} else {
-			$this->screen = '';
-		}
-
-		$override = apply_filters( 'lsx_hero_banner_override', false );
-		if ( false !== $override ) {
-			$this->screen = '';
 		}
 	}
 
 	/**
-	 * Outputs the single
+	 * Position our page title class on the body
 	 *
-	 * @return void
+	 * @param  array $classes
+	 * @return array
 	 */
-	public function wp_head() {
-		$this->set_screen();
-		add_action( 'body_class', array( $this, 'body_class' ) );
+	public function position_title() {
+		$position = get_post_meta( get_the_ID(), 'lsx_title_position', true );
+		$position = apply_filters( 'lsx_hero_banner_block_position', $position );
+		switch ( $position ) {
+			case 'below-banner':
+				add_action( 'lsx_content_top', array( $this, 'lsx_block_header' ) );
+				break;
 
-		if ( '' !== $this->screen ) {
-			remove_action( 'lsx_content_wrap_before', 'lsx_global_header' );
-			add_filter( 'lsx_banner_disable', array( $this, 'disable_banner' ), 100, 1 );
-			add_filter( 'lsx_global_header_disable', array( $this, 'disable_banner' ), 100, 1 );
-			add_filter( 'lsx_page_banner_disable', array( $this, 'disable_banner' ), 100, 1 );
+			case 'above-content':
+				add_action( 'lsx_entry_top', array( $this, 'lsx_block_header' ) );
+				break;
 
-			remove_action( 'lsx_entry_top', 'lsx_post_header' );
-			remove_action( 'lsx_entry_top', 'lsx_add_entry_meta', 999 );
-			add_action( 'lsx_entry_top', array( $this, 'lsx_block_header' ) );
+			case 'in-banner':
+			default:
+				add_action( 'lsx_hero_banner', array( $this, 'lsx_block_header' ) );
+				break;
 		}
 	}
 
@@ -184,9 +105,15 @@ class Page_Title {
 	 * @return array
 	 */
 	public function body_class( $classes ) {
-		if ( '' !== $this->screen ) {
-			$classes[] = $this->body_css;
+
+		$disable_title = get_post_meta( get_the_ID(), 'lsx_disable_title', true );
+		if ( 'yes' !== $disable_title || ( ! is_singular() ) ) {
+			return $classes;
 		}
+		$position  = get_post_meta( get_the_ID(), 'lsx_title_position', true );
+		$position  = apply_filters( 'lsx_hero_banner_block_position', $position );
+		$classes[] = 'lsx-title-' . $position;
+		$classes[] = 'lsx-page-title';
 		return $classes;
 	}
 
@@ -194,25 +121,16 @@ class Page_Title {
 	 * Outputs the page header in a WordPress Block format.
 	 */
 	public function lsx_block_header() {
+		$disable_title = get_post_meta( get_the_ID(), 'lsx_disable_title', true );
+		if ( 'yes' !== $disable_title || ( ! is_singular() ) ) {
+			return;
+		}
 		?>
 			<?php do_action( 'lsx_block_header_top' ); ?>
 
-			<div class="lsx-hero-banner-block wp-block-cover has-background alignfull">
-				<div class="wp-block-cover__inner-container">
-					<div class="lsx-title-block wp-block-group">
-						<div class="wp-block-group__inner-container">
-							<?php $this->lsx_block_title(); ?>
-						</div>
-					</div>
-					<?php
-					if ( is_singular( 'post' ) ) {
-						?>
-							<div class="entry-meta">
-								<?php lsx_post_meta_single_top(); ?>
-							</div><!-- .entry-meta -->
-						<?php
-					}
-					?>
+			<div class="lsx-title-block wp-block-group <?php $this->the_title_width(); ?> <?php $this->the_title_bg_colour_class(); ?>" style="<?php $this->the_title_bg_colour_attr(); ?>">
+				<div class="wp-block-group__inner-container">
+					<?php $this->lsx_block_title(); ?>
 				</div>
 			</div>
 
@@ -226,46 +144,83 @@ class Page_Title {
 	 */
 	public function lsx_block_title() {
 		$title = apply_filters( 'lsx_block_title', get_the_title() );
-		$title = '<h1 class="has-text-align-center">' . $title . '</h1>';
+		$title = '<h1 class="' . $this->get_title_css() . '" style="' . $this->get_title_colour_attr() . '">' . $title . '</h1>';
 		echo wp_kses_post( $title );
 	}
 
 	/**
-	 * Disable the LSX banners
+	 * Gets the title css classes.
 	 *
-	 * @param  boolean $disable
-	 * @return boolean
+	 * @return string
 	 */
-	public function disable_banner( $disable ) {
-		$disable = true;
-		return $disable;
+	public function get_title_css() {
+		$classes = '';
+		$alignment = get_post_meta( get_the_ID(), 'lsx_title_alignment', true );
+		if ( '' === $alignment || false === $alignment ) {
+			$alignment = 'center';
+		}
+		$classes .= ' has-text-align-' . $alignment;
+
+		$colour = get_post_meta( get_the_ID(), 'lsx_title_bg_colour', true );
+		if ( '' !== $colour && false !== $colour ) {
+			$classes .= ' has-text-color';
+		}
+
+		return $classes;
 	}
 
-	public function disable_wc_banner( $disable ) {
-		// Cart and Checkout won't have banners of any kind.
-		if ( function_exists( 'is_woocommerce' ) && ( is_checkout() || is_cart() ) ) {
-			$disable = true;
+	/**
+	 * Gets the width you want for the parent group block .
+	 */
+	public function the_title_width() {
+		$classes = '';
+		$width   = get_post_meta( get_the_ID(), 'lsx_title_width', true );
+		if ( '' === $width || false === $width ) {
+			$width = 'content';
 		}
+		$classes = 'align' . $width;
+		echo esc_attr( $classes );
+	}
 
-		// Product pages have their own banner function 'lsx_page_banner()'.
-		if ( function_exists( 'is_woocommerce' ) && ( is_product() ) ) {
-			$disable = true;
+	/**
+	 * Gets the width you want for the parent group block .
+	 *
+	 * @return string
+	 */
+	public function the_title_bg_colour_class() {
+		$classes = '';
+		$colour  = get_post_meta( get_the_ID(), 'lsx_title_bg_colour', true );
+		if ( '' !== $colour && false !== $colour ) {
+			$classes = ' has-background';
 		}
+		echo esc_attr( $classes );
+	}
 
-		// Cart and Checkout won't have banners of any kind.
-		if ( function_exists( 'tribe_is_event' ) && tribe_is_event() ) {
-			$disable = true;
+	/**
+	 * Gets the width you want for the parent group block .
+	 *
+	 * @return string
+	 */
+	public function the_title_bg_colour_attr() {
+		$attr   = '';
+		$colour = get_post_meta( get_the_ID(), 'lsx_title_bg_colour', true );
+		if ( '' !== $colour && false !== $colour ) {
+			$attr = ' background-color:' . $colour . ';';
 		}
+		echo esc_attr( $attr );
+	}
 
-		if ( function_exists( 'lsx_is_rest_api_request' ) && lsx_is_rest_api_request() ) {
-			$disable = true;
+	/**
+	 * Gets the colour for the title text.
+	 *
+	 * @return string
+	 */
+	public function get_title_colour_attr() {
+		$attr   = '';
+		$colour = get_post_meta( get_the_ID(), 'lsx_title_colour', true );
+		if ( '' !== $colour && false !== $colour ) {
+			$attr = ' color:' . $colour . ';';
 		}
-
-		// LSX Team Doesnt use a banner.
-		if ( function_exists( 'is_woocommerce' ) && ( is_product() ) ) {
-			$disable = true;
-		}
-
-		return $disable;
+		return $attr;
 	}
 }

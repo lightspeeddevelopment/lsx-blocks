@@ -10,14 +10,9 @@ $blue: #418ad0;
 $accent: #27639e;
 $lightgray: #626e81;
 $textgray: #919191;
-$text_light: #777777;
 $orange: #f7ae00;
 $graybg: #f6f6f6;
 $groupbg: #f2f2f2;
-
-$lsx-gap: 2.4rem;
-$lsx-medium-gap: 4.25rem;
-$lsx-large-gap: 8.5rem;
 
 /* Font size styles */
 @media only screen and (min-width: 600px) {
@@ -326,41 +321,6 @@ article {
 				&:hover {
 					color: #00a0d2;
 				}
-			}
-		}
-	}
-}
-
-.lsx-panel-row {
-	.lsx-page-title-label {
-		margin-left: 10px;
-		vertical-align: bottom;
-	}
-}
-
-.lsx-hero-banner-block {
-	background-color: #2b3840;
-	margin-bottom: 4.25rem;
-	.gutenberg-compatible-template.using-gutenberg.single-post & {
-		margin-bottom: 4.25rem;
-	}
-	.lsx-title-block {
-		h1 {
-			margin-bottom: 0;
-		}
-	}
-}
-
-body.banner-disabled {
-	&.single {
-		#primary.content-area {
-			margin-top: 50px;
-		}
-
-		article {
-			.entry-content {
-				margin-top: 0px;
-				padding-top: 0px;
 			}
 		}
 	}

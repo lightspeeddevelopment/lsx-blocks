@@ -11,7 +11,7 @@ const { addFilter } = wp.hooks;
 const { createHigherOrderComponent } = wp.compose;
 const { Fragment } = wp.element;
 const { InspectorControls } = wp.blockEditor;
-const { PanelBody, RangeControl, TextControl } = wp.components;
+const { PanelBody, RangeControl } = wp.components;
 
 // Enable spacing control on the following blocks
 const enableCustomCover = ["core/cover"];
@@ -36,31 +36,31 @@ function addCoverControlAttributes(settings, name) {
 			default: 0
 		},
 		containerMaxWidth: {
-			type: "text"
+			type: "number"
 		},
 		coverPaddingTop: {
-			type: "text"
+			type: "number"
 		},
 		coverPaddingBottom: {
-			type: "text"
+			type: "number"
 		},
 		coverPaddingLeft: {
-			type: "text"
+			type: "number"
 		},
 		coverPaddingRight: {
-			type: "text"
+			type: "number"
 		},
 		coverMarginTop: {
-			type: "text"
+			type: "number"
 		},
 		coverMarginBottom: {
-			type: "text"
+			type: "number"
 		},
 		coverMarginLeft: {
-			type: "text"
+			type: "number"
 		},
 		coverMarginRight: {
-			type: "text"
+			type: "number"
 		}
 	});
 
@@ -99,75 +99,93 @@ const coverSettingsControl = createHigherOrderComponent(BlockEdit => {
 				<BlockEdit {...props} />
 				<InspectorControls>
 					<PanelBody title={__("Additional LSX Settings")} initialOpen={true}>
-						<TextControl
+						<RangeControl
 							label={__("Container Max width (px)")}
-							type="text"
 							value={containerMaxWidth}
 							onChange={value =>
 								props.setAttributes({ containerMaxWidth: value })
 							}
+							min={10}
+							max={1170}
+							step={1}
 						/>
-						<TextControl
+						<RangeControl
 							label={__("Cover Padding Top (px)")}
-							type="text"
 							value={coverPaddingTop}
 							onChange={value =>
 								props.setAttributes({ coverPaddingTop: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
+						<RangeControl
 							label={__("Cover Padding Bottom (px)")}
-							type="text"
 							value={coverPaddingBottom}
 							onChange={value =>
 								props.setAttributes({ coverPaddingBottom: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
+						<RangeControl
 							label={__("Cover Padding Left (px)")}
-							type="text"
 							value={coverPaddingLeft}
 							onChange={value =>
 								props.setAttributes({ coverPaddingLeft: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
-							label={__("Cover Padding Right:  (px)")}
-							type="text"
+						<RangeControl
+							label={__("Cover Padding Right (px)")}
 							value={coverPaddingRight}
 							onChange={value =>
 								props.setAttributes({ coverPaddingRight: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
-							label={__("Cover Padding Top:  (px)")}
-							type="text"
+						<RangeControl
+							label={__("Cover Margin Top (px)")}
 							value={coverMarginTop}
 							onChange={value => props.setAttributes({ coverMarginTop: value })}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
-							label={__("Cover Margin Bottom:  (px)")}
-							type="text"
+						<RangeControl
+							label={__("Cover Margin Bottom (px)")}
 							value={coverMarginBottom}
 							onChange={value =>
 								props.setAttributes({ coverMarginBottom: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
-							label={__("Cover Margin Left:  (px)")}
-							type="text"
+						<RangeControl
+							label={__("Cover Margin Left (px)")}
 							value={coverMarginLeft}
 							onChange={value =>
 								props.setAttributes({ coverMarginLeft: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
-						<TextControl
-							label={__("Cover Margin Right:  (px)")}
-							type="text"
+						<RangeControl
+							label={__("Cover Margin Right (px)")}
 							value={coverMarginRight}
 							onChange={value =>
 								props.setAttributes({ coverMarginRight: value })
 							}
+							min={0}
+							max={100}
+							step={1}
 						/>
 					</PanelBody>
 				</InspectorControls>
@@ -274,7 +292,7 @@ const addChildrenStyles = (element, block, attributes) => {
 		block.name === "core/cover" &&
 		undefined !== attributes.containerMaxWidth
 	) {
-		//console.log(attributes.containerMaxWidth);
+		console.log(attributes.containerMaxWidth);
 		let style = "";
 		var obj2 = { maxWidth: maxWidth };
 		var savedElement = undefined;
