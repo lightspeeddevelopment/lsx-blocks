@@ -402,7 +402,9 @@ class Hero_Banner {
 
 		if ( '' !== $image && false !== $image ) {
 			$image = explode( '|', $image );
-			$attr  = $image[1];
+			if ( is_array( $image ) && isset( $image[1] ) ) {
+				$attr  = $image[1];
+			}
 		}
 		return $attr;
 	}

@@ -60,9 +60,7 @@ class Page_Title {
 	public function init() {
 		if ( defined( 'LSX_VERSION' ) ) {
 			$version_compare = version_compare( '2.8.0', LSX_VERSION );
-			if ( $version_compare < 1 ) {
-				return;
-			}
+
 			// Remove the legacy page title and entry meta.
 			if ( function_exists( 'has_blocks' ) && ( has_blocks() || true === apply_filters( 'override_title_display', false ) ) ) {
 				remove_action( 'lsx_entry_top', 'lsx_post_header' );
